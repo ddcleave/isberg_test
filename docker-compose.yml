@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: postgres
+    container_name: postrgres_isberg
+    restart: always
+    expose: 
+      - 5432
+    ports: 
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: example
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h db -p 5432"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./test.sql:/docker-entrypoint-initdb.d/test.sql
+  
+  redis:
+    image: redis
+    container_name: redis_isberg
+    expose: 
+      - 6379
+    ports:
+      - 6379:6379
+    command: ["redis-server"]
+
+  web:
+    build: .
+    container_name: aioserver
+    ports:
+      -  80:80
+    depends_on:
+      db:
+        condition: service_healthy
